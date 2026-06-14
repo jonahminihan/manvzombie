@@ -1,25 +1,40 @@
 #pragma once
+#include  "mvz_buffer.hpp"
 #include "mvz_device.hpp"
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 
+#include <memory>
 #include <vector>
 
 namespace mvz {
     class MvzModel {
     public:
         struct Vertex {
-            glm::vec2 position;
-            glm::vec3 color;
+            glm::vec3 position{};
+            glm::vec3 color{};
+            glm::vec3 normal{};
+            glm::vec2 uv{};
 
             static std::vector<VkVertexInputBindingDescription> getBindingDescriptions();
 
             static std::vector<VkVertexInputAttributeDescription> getAttributeDescriptions();
+
+            bool operator==(const Vertex &other) const {
+                return position == other.position && color == other.color && normal == other.normal && uv == other.uv;
+            }
         };
 
-        MvzModel(MvzDevice &device, const std::vector<Vertex> &vertices);
+        struct Builder {
+            std::vector<Vertex> vertices{};
+            std::vector<uint32_t> indices{};
+
+            void loadModel(const std::string &filepath);
+        };
+
+        MvzModel(MvzDevice &device, const Builder &builder);
 
         ~MvzModel();
 
@@ -27,16 +42,24 @@ namespace mvz {
 
         MvzModel &operator=(const MvzModel &) = delete;
 
-        void bind(VkCommandBuffer command_buffer);
+        static std::unique_ptr<MvzModel> createModelFromFile(MvzDevice &device, const std::string &filepath);
 
-        void draw(VkCommandBuffer command_buffer);
+        void bind(VkCommandBuffer commandBuffer);
+
+        void draw(VkCommandBuffer commandBuffer);
 
     private:
         void createVertexBuffers(const std::vector<Vertex> &vertices);
 
+        void createIndexBuffers(const std::vector<uint32_t> &indices);
+
         MvzDevice &mvzDevice;
-        VkBuffer vertexBuffer;
-        VkDeviceMemory vertexBufferMemory;
+
+        std::unique_ptr<MvzBuffer> vertexBuffer;
         uint32_t vertexCount;
+
+        bool hasIndexBuffer = false;
+        std::unique_ptr<MvzBuffer> indexBuffer;
+        uint32_t indexCount;
     };
 }

@@ -28,12 +28,23 @@ add_executable(manvzombie main.cpp
         mvz_renderer.hpp
         mvz_renderer.cpp
         simple_render_system.hpp
-        simple_render_system.cpp)
+        simple_render_system.cpp
+        mvz_camera.hpp
+        mvz_camera.cpp
+        keyboard_movement_controller.hpp
+        keyboard_movement_controller.cpp
+        mvz_utils.hpp
+        mvz_game_object.cpp
+        mvz_buffer.hpp
+        mvz_buffer.cpp
+        mvz_frame_info.hpp)
 
 add_dependencies(manvzombie CompileShaders)
 
 target_link_libraries(manvzombie glfw)
 target_link_libraries(manvzombie Vulkan::Vulkan)
 include_directories("/opt/homebrew/include")
+include_directories("/Users/jonah/dev/libs/tinyobjloader")
 link_directories("/opt/homebrew/lib")
+link_directories("/Users/jonah/dev/libs/tinyobjloader")
 

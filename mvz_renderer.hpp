@@ -19,6 +19,7 @@ namespace mvz {
         MvzRenderer &operator=(const MvzRenderer &) = delete;
 
         VkRenderPass getSwapChainRenderPass() const { return mvzSwapChain->getRenderPass(); };
+        float getAspectRatio() const { return mvzSwapChain->extentAspectRatio(); }
         bool isFrameInProgress() const { return isFrameStarted; };
 
         VkCommandBuffer getCurrentCommandBuffer() const {

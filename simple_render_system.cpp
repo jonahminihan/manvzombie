@@ -7,9 +7,8 @@
 
 namespace mvz {
     struct SimplePushConstantData {
-        glm::mat2 tranform{1.f};
-        glm::vec2 offset;
-        alignas(16) glm::vec3 color;
+        glm::mat4 transform{1.f};
+        glm::mat4 normalMatrix{1.f};
     };
 
     SimpleRenderSystem::SimpleRenderSystem(MvzDevice &device, VkRenderPass renderPass) : mvzDevice{device} {
@@ -51,20 +50,21 @@ namespace mvz {
     }
 
 
-    void SimpleRenderSystem::renderGameObjects(VkCommandBuffer commandBuffer, std::vector<MvzGameObject> &gameObjects) {
-        mvzPipeline->bind(commandBuffer);
-        for (auto &obj: gameObjects) {
-            obj.transform2d.rotation = glm::mod(obj.transform2d.rotation + 0.01f, glm::two_pi<float>());
-            SimplePushConstantData push{};
-            push.offset = obj.transform2d.translation;
-            push.color = obj.color;
-            push.tranform = obj.transform2d.mat2();
+    void SimpleRenderSystem::renderGameObjects(FrameInfo &frameInfo, std::vector<MvzGameObject> &gameObjects) {
+        mvzPipeline->bind(frameInfo.commandBuffer);
 
-            vkCmdPushConstants(commandBuffer, pipelineLayout,
+        auto projectionView = frameInfo.camera.getProjection() * frameInfo.camera.getView();
+        for (auto &obj: gameObjects) {
+            SimplePushConstantData push{};
+            auto modelMatrix = obj.transform.mat4();
+            push.transform = projectionView * modelMatrix;
+            push.normalMatrix = obj.transform.normalMatrix();
+
+            vkCmdPushConstants(frameInfo.commandBuffer, pipelineLayout,
                                VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0,
                                sizeof(SimplePushConstantData), &push);
-            obj.model->bind(commandBuffer);
-            obj.model->draw(commandBuffer);
+            obj.model->bind(frameInfo.commandBuffer);
+            obj.model->draw(frameInfo.commandBuffer);
         }
     }
 }
