@@ -11,7 +11,7 @@
 namespace mvz {
     class SimpleRenderSystem {
     public:
-        SimpleRenderSystem(MvzDevice &device, VkRenderPass renderPass);
+        SimpleRenderSystem(MvzDevice &device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout);
 
         ~SimpleRenderSystem();
 
@@ -19,10 +19,10 @@ namespace mvz {
 
         SimpleRenderSystem &operator=(const SimpleRenderSystem &) = delete;
 
-        void renderGameObjects(FrameInfo &frameInfo, std::vector<MvzGameObject> &gameObjects);
+        void renderGameObjects(FrameInfo &frameInfo);
 
     private:
-        void createPipelineLayout();
+        void createPipelineLayout(VkDescriptorSetLayout globalSetLayout);
 
         void createPipeline(VkRenderPass renderPass);
 

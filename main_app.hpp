@@ -3,6 +3,7 @@
 #include "mvz_device.hpp"
 #include "mvz_game_object.hpp"
 #include "mvz_renderer.hpp"
+#include "mvz_descriptors.hpp"
 
 #include <memory>
 #include <vector>
@@ -29,6 +30,9 @@ namespace mvz {
         MvzWindow mvzWindow{WIDTH, HEIGHT, "Man V Zombie"};
         MvzDevice mvzDevice{mvzWindow};
         MvzRenderer mvzRenderer{mvzWindow, mvzDevice};
-        std::vector<MvzGameObject> gameObjects;
+
+        // note: order of declarations matters
+        std::unique_ptr<MvzDescriptorPool> globalPool{};
+        MvzGameObject::Map gameObjects;
     };
 }

@@ -37,7 +37,9 @@ add_executable(manvzombie main.cpp
         mvz_game_object.cpp
         mvz_buffer.hpp
         mvz_buffer.cpp
-        mvz_frame_info.hpp)
+        mvz_frame_info.hpp
+        mvz_descriptors.hpp
+        mvz_descriptors.cpp)
 
 add_dependencies(manvzombie CompileShaders)
 
