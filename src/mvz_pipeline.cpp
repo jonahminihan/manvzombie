@@ -64,8 +64,8 @@ namespace mvz {
         shaderStages[1].pNext = nullptr;
         shaderStages[1].pSpecializationInfo = nullptr;
 
-        auto bindingDescriptions = MvzModel::Vertex::getBindingDescriptions();
-        auto attributeDescriptions = MvzModel::Vertex::getAttributeDescriptions();
+        auto &bindingDescriptions = configInfo.bindingDescriptions;
+        auto &attributeDescriptions = configInfo.attributeDescriptions;
 
         VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
         vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
@@ -184,5 +184,26 @@ namespace mvz {
         configInfo.dynamicStateInfo.pDynamicStates = configInfo.dynamicStateEnables.data();
         configInfo.dynamicStateInfo.dynamicStateCount = static_cast<uint32_t>(configInfo.dynamicStateEnables.size());
         configInfo.dynamicStateInfo.flags = 0;
+
+        configInfo.bindingDescriptions = MvzModel::Vertex::getBindingDescriptions();
+        configInfo.attributeDescriptions = MvzModel::Vertex::getAttributeDescriptions();
+    }
+
+    void MvzPipeline::enableAlphaBlending(PipelineConfigInfo &configInfo) {
+        configInfo.colorBlendAttachment.blendEnable = VK_TRUE;
+        configInfo.colorBlendAttachment.colorWriteMask =
+                VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT |
+                VK_COLOR_COMPONENT_A_BIT;
+        // Src is the current fragment being drawn
+        // Dst is whatever color exists at that location in the color attachment
+        // color.rgb = (src.a * src.rgb) + ((1 - src.a) * dst.rgb)
+        // This requires rendering solid objects first, then semi transparent from
+        // farthest to closest
+        configInfo.colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+        configInfo.colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+        configInfo.colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
+        configInfo.colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+        configInfo.colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+        configInfo.colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
     }
 }

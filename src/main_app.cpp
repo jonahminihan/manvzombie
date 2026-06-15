@@ -2,7 +2,8 @@
 #include <stdexcept>
 
 #include "mvz_buffer.hpp"
-#include "simple_render_system.hpp"
+#include "systems/simple_render_system/simple_render_system.hpp"
+#include "systems/point_light_system/point_light_system.hpp"
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -13,13 +14,6 @@
 #include "keyboard_movement_controller.hpp"
 
 namespace mvz {
-    struct GlobalUbo {
-        glm::mat4 projectionView{1.f};
-        glm::vec4 ambientLightColor{1.f, 1.f, 1.f, .02f}; // w is intensity
-        glm::vec3 lightPosition{-1.f};
-        alignas(16)glm::vec4 lightColor{1.f}; // w is light intensity
-    };
-
     MainApp::MainApp() {
         globalPool = MvzDescriptorPool::Builder(mvzDevice)
                 .setMaxSets(MvzSwapChain::MAX_FRAMES_IN_FLIGHT)
@@ -59,6 +53,9 @@ namespace mvz {
         SimpleRenderSystem simpleRenderSystem{
             mvzDevice, mvzRenderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout()
         };
+        PointLightSystem pointLightSystem{
+            mvzDevice, mvzRenderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout()
+        };
         MvzCamera camera{};
         camera.setViewTarget(glm::vec3{-1.f, -2.f, 20.f}, glm::vec3{.0f, .0f, 2.5f});
 
@@ -93,13 +90,17 @@ namespace mvz {
                 };
                 // update
                 GlobalUbo ubo{};
-                ubo.projectionView = camera.getProjection() * camera.getView();
+                ubo.projection = camera.getProjection();
+                ubo.view = camera.getView();
+                ubo.inverseView = camera.getInverseView();
+                pointLightSystem.update(frameInfo, ubo);
                 uboBuffers[frameIndex]->writeToBuffer(&ubo);
                 uboBuffers[frameIndex]->flush();
 
                 // render
                 mvzRenderer.beginSwapChainRenderPass(commandBuffer);
                 simpleRenderSystem.renderGameObjects(frameInfo);
+                pointLightSystem.render(frameInfo);
                 mvzRenderer.endSwapChainRenderPass(commandBuffer);
                 mvzRenderer.endFrame();
             }
@@ -129,5 +130,27 @@ namespace mvz {
         floor.transform.translation = {0.f, .5f, 0.f};
         floor.transform.scale = glm::vec3{3.f, 1.f, 3.f};
         gameObjects.emplace(floor.getId(), std::move(floor));
+
+        auto pointLight = MvzGameObject::makePointLight(.2f);
+        gameObjects.emplace(pointLight.getId(), std::move(pointLight));
+
+        std::vector<glm::vec3> lightColors{
+            {1.f, .1f, .1f},
+            {.1f, .1f, 1.f},
+            {.1f, 1.f, .1f},
+            {1.f, 1.f, .1f},
+            {.1f, 1.f, 1.f},
+            {1.f, 1.f, 1.f}
+        };
+
+        for (int i = 0; i < lightColors.size(); i++) {
+            auto pointLight = MvzGameObject::makePointLight(.2f);
+            pointLight.color = lightColors[i];
+            auto rotateLight = glm::rotate(glm::mat4(1.f), (i * glm::two_pi<float>()) / lightColors.size(),
+                                           {0.f, -1.f, 0.f}
+            );
+            pointLight.transform.translation = glm::vec3(rotateLight * glm::vec4(-1.f, -1.f, -1.f, 1.f));
+            gameObjects.emplace(pointLight.getId(), std::move(pointLight));
+        }
     }
 }

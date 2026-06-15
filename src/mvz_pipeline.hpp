@@ -14,6 +14,8 @@ namespace mvz {
 
         PipelineConfigInfo &operator=(const PipelineConfigInfo &) = delete;
 
+        std::vector<VkVertexInputBindingDescription> bindingDescriptions{};
+        std::vector<VkVertexInputAttributeDescription> attributeDescriptions{};
         VkPipelineViewportStateCreateInfo viewportInfo;
         VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo;
         VkPipelineRasterizationStateCreateInfo rasterizationInfo;
@@ -42,6 +44,8 @@ namespace mvz {
         void bind(VkCommandBuffer commandBuffer);
 
         static void defaultPipelineConfigInfo(PipelineConfigInfo &configInfo);
+
+        static void enableAlphaBlending(PipelineConfigInfo &configInfo);
 
     private:
         static std::vector<char> readFile(const std::string &filePath);

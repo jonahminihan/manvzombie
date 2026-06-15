@@ -146,6 +146,7 @@ add_custom_target(
 )
 
 #add_dependencies(manvzombie CompileShaders)
+add_dependencies(manvzombie Shaders)
 
 target_link_libraries(manvzombie glfw)
 target_link_libraries(manvzombie Vulkan::Vulkan)
